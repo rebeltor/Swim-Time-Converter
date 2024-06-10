@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject HttpClient Http
 
 <PageTitle>Swim Time Converter</PageTitle>
 
@@ -10,7 +11,8 @@
         <div class="input-group-prepend">
             <span class="input-group-text" id="basic-addon1">Time</span>
         </div>
-        <input type="text" class="form-control" @bind=@InTime placeholder="00:00.00" aria-label="Time" aria-describedby="basic-addon1">
+        <input type="text" class="form-control" placeholder="00:00.00" aria-describedby="basic-addon1" 
+            @bind:event="oninput" @bind:get="InTime" @bind:set="OnTimeInput" />
     </div>
 
     <div class="input-group mb-3">
@@ -21,19 +23,19 @@
             <option value="@EventTypes.FREE50">@EnumHelper.GetDescription(EventTypes.FREE50)</option>
             <option value="@EventTypes.FREE100">@EnumHelper.GetDescription(EventTypes.FREE100)</option>
             <option value="@EventTypes.FREE200">@EnumHelper.GetDescription(EventTypes.FREE200)</option>
-            <option value="@EventTypes.FLY50">@EnumHelper.GetDescription(EventTypes.FLY50)</option>
+            <!--<option value="@EventTypes.FLY50">@EnumHelper.GetDescription(EventTypes.FLY50)</option>-->
             <option value="@EventTypes.FLY100">@EnumHelper.GetDescription(EventTypes.FLY100)</option>
             <option value="@EventTypes.FLY200">@EnumHelper.GetDescription(EventTypes.FLY200)</option>
-            <option value="@EventTypes.BREAST50">@EnumHelper.GetDescription(EventTypes.BREAST50)</option>
+            <!--<option value="@EventTypes.BREAST50">@EnumHelper.GetDescription(EventTypes.BREAST50)</option>-->
             <option value="@EventTypes.BREAST100">@EnumHelper.GetDescription(EventTypes.BREAST100)</option>
             <option value="@EventTypes.BREAST200">@EnumHelper.GetDescription(EventTypes.BREAST200)</option>
-            <option value="@EventTypes.BACK50">@EnumHelper.GetDescription(EventTypes.BACK50)</option>
+            <!--<option value="@EventTypes.BACK50">@EnumHelper.GetDescription(EventTypes.BACK50)</option>-->
             <option value="@EventTypes.BACK100">@EnumHelper.GetDescription(EventTypes.BACK100)</option>
             <option value="@EventTypes.BACK200">@EnumHelper.GetDescription(EventTypes.BACK200)</option>
             <option value="@EventTypes.IM200">@EnumHelper.GetDescription(EventTypes.IM200)</option>
             <option value="@EventTypes.IM400">@EnumHelper.GetDescription(EventTypes.IM400)</option>
             <option value="@EventTypes.FREE400_500">@EnumHelper.GetDescription(EventTypes.FREE400_500)</option>
-            <option value="@EventTypes.FREE800_1000">@EnumHelper.GetDescription(EventTypes.FREE800_1000)</option>
+            <!--<option value="@EventTypes.FREE800_1000">@EnumHelper.GetDescription(EventTypes.FREE800_1000)</option>-->
             <option value="@EventTypes.FREE1500_1650">@EnumHelper.GetDescription(EventTypes.FREE1500_1650)</option>
         </select>
     </div>
@@ -44,7 +46,7 @@
         </div>
         <select class="form-control" @bind=@ConversionTypeFrom>
             <option value="@ConversionTypes.SCY">@EnumHelper.GetDescription(ConversionTypes.SCY)</option>
-            <option value="@ConversionTypes.SCM">@EnumHelper.GetDescription(ConversionTypes.SCM)</option>
+            <!--<option value="@ConversionTypes.SCM">@EnumHelper.GetDescription(ConversionTypes.SCM)</option>-->
             <option value="@ConversionTypes.LCM">@EnumHelper.GetDescription(ConversionTypes.LCM)</option>
         </select>
     </div>
@@ -68,71 +70,400 @@
             <option value="@GenderTypes.FEMALE">@EnumHelper.GetDescription(GenderTypes.FEMALE)</option>
             <option value="@GenderTypes.MALE">@EnumHelper.GetDescription(GenderTypes.MALE)</option>
         </select>
+        <!-- this is an example of how to catch the change event on the combobox
+        <select value="@GenderTypes.FEMALE" @onchange="@onGenderChanged" class="form-control">
+            <option value="@GenderTypes.FEMALE">@EnumHelper.GetDescription(GenderTypes.FEMALE)</option>
+            <option value="@GenderTypes.MALE">@EnumHelper.GetDescription(GenderTypes.MALE)</option>
+        </select>
+        -->
     </div>
 </div>
 
-<p>@SelectedEvent @InTime @ConversionTypeFrom @ConversionTypeTo @Gender</p>
+<!-- used for debugging / troubleshooting -->
+<p>@InTime @SelectedEvent @ConversionTypeFrom @ConversionTypeTo @Gender</p>
 
+<p>@ErrorMessage</p>
 <p>@OutTime</p>
-
 
 <button class="btn btn-primary" @onclick="ReCalculateTime">Re-calculate</button>
 
 
-
-
-
-
 @code {
+
+    string InTime = "";
+    string SelectedEvent = EventTypes.FREE50.ToString();
+    string ConversionTypeFrom = ConversionTypes.SCY.ToString();
+    string ConversionTypeTo = ConversionTypes.LCM.ToString();
+    string Gender = GenderTypes.FEMALE.ToString();
     private string OutTime = "00:00.00";
+    private string ErrorMessage = "";
+
+    private TimeStandard[]? timeStandardsLCM2SCM;
+    private TimeStandard[]? timeStandardsLCM2SCY;
+    private TimeStandard[]? timeStandardsSCM2SCY;
 
     private void ReCalculateTime()
     {
-        OutTime = "99:99.99";
-    }
+        bool errorFound = false;
 
-    string InTime = "00:00.00";
-    void ChangeInTime(ChangeEventArgs e)
-    {
-        if (e.Value is not null)
+        #region ensure we have valid conversion data
+
+        if (timeStandardsLCM2SCM == null)
         {
-            InTime = (string)e.Value;
+            ErrorMessage = "Could not locate LCM to SCM conversion table";
+            errorFound = true;
+        }
+        if (timeStandardsLCM2SCY == null)
+        {
+            ErrorMessage = "Could not locate LCM to SCY conversion table";
+            errorFound = true;
+        }
+        if (timeStandardsSCM2SCY == null)
+        {
+            ErrorMessage = "Could not locate SCM to SCY conversion table";
+            errorFound = true;
+        }
+
+        #endregion
+
+        #region ensure the required fields are present
+
+        if (string.IsNullOrWhiteSpace(InTime))
+        {
+            ErrorMessage = "Please enter a \"Time\"";
+            errorFound = true;
+        }
+        if (string.IsNullOrWhiteSpace(SelectedEvent))
+        {
+            ErrorMessage = "Please select an \"Event\"";
+            errorFound = true;
+        }
+        if (string.IsNullOrWhiteSpace(ConversionTypeFrom))
+        {
+            ErrorMessage = "Please select \"From\"";
+            errorFound = true;
+        }
+        if (string.IsNullOrWhiteSpace(ConversionTypeTo))
+        {
+            ErrorMessage = "Please select \"To\"";
+            errorFound = true;
+        }
+        if (string.IsNullOrWhiteSpace(Gender))
+        {
+            ErrorMessage = "Please select a \"Gender\"";
+            errorFound = true;
+        }
+
+        #endregion
+
+        #region ensure the data passed in is a valid enum
+
+        EventTypes eventType;
+        if (!Enum.TryParse(SelectedEvent, out eventType))
+        {
+            ErrorMessage = SelectedEvent + " is an invalid \"Event Type\"";
+            errorFound = true;
+        }
+
+        ConversionTypes convertFrom;
+        if (!Enum.TryParse(ConversionTypeFrom, out convertFrom))
+        {
+            ErrorMessage = ConversionTypeFrom + " is an invalid \"From\"";
+            errorFound = true;
+        }
+
+        ConversionTypes convertTo;
+        if (!Enum.TryParse(ConversionTypeTo, out convertTo))
+        {
+            ErrorMessage = ConversionTypeTo + " is an invalid \"To\"";
+            errorFound = true;
+        }
+
+        GenderTypes gender;
+        if (!Enum.TryParse(Gender, out gender))
+        {
+            ErrorMessage = ConversionTypeTo + " is an invalid \"To\"";
+            errorFound = true;
+        }
+
+        #endregion
+
+        #region ensure the time is valid
+
+        if (!IsTimeValid(InTime))
+        {
+            ErrorMessage = "Invalid time entered \"" + InTime + "\"";
+            errorFound = true;
+        }
+
+        #endregion
+
+        if (errorFound)
+        {
+            OutTime = "";
+        }
+        else
+        {
+            // otherwise no errors were found, perform the conversion
+            OutTime = TimeConversion(InTime, eventType, convertFrom, convertTo, gender);
         }
     }
 
-    string SelectedEvent = EventTypes.FREE50.ToString();
-    void ChangeEvent(ChangeEventArgs e)
+    private string TimeConversion(string inTime, EventTypes eventType, ConversionTypes from, ConversionTypes to, GenderTypes gender)
     {
-        if (e.Value is not null)
+        // first of the to/from are the same then we just return the time
+        if (from == to)
         {
-            SelectedEvent = (string)e.Value;
+            return inTime;
         }
+
+        decimal factor = 1.0M;
+        bool multiply = true;
+
+        #region get the factor used for the conversion
+
+        // locate the factor used for the conversion
+        // converting in the direction of the table should be a multiply of the factor
+        // converting in the opposite direction should be a division of the factor
+
+        if (from == ConversionTypes.LCM && to == ConversionTypes.SCM)
+        {
+            multiply = true;
+            factor = GetFactor(eventType, timeStandardsLCM2SCM, gender);
+        }
+        else if (from == ConversionTypes.LCM && to == ConversionTypes.SCY)
+        {
+            multiply = true;
+            factor = GetFactor(eventType, timeStandardsLCM2SCY, gender);
+        }
+        else if (from == ConversionTypes.SCM && to == ConversionTypes.SCY)
+        {
+            multiply = true;
+            factor = GetFactor(eventType, timeStandardsSCM2SCY, gender);
+        }
+        else if (from == ConversionTypes.SCM && to == ConversionTypes.LCM)
+        {
+            multiply = false;
+            factor = GetFactor(eventType, timeStandardsLCM2SCM, gender);
+        }
+        else if (from == ConversionTypes.SCY && to == ConversionTypes.LCM)
+        {
+            multiply = false;
+            factor = GetFactor(eventType, timeStandardsLCM2SCY, gender);
+        }
+        else if (from == ConversionTypes.SCY && to == ConversionTypes.SCM)
+        {
+            multiply = false;
+            factor = GetFactor(eventType, timeStandardsSCM2SCY, gender);
+        }
+
+        #endregion
+
+        // take the time and convert it to seconds
+        decimal seconds = TimeToDecimal(inTime);
+
+        if (multiply)
+        {
+            seconds *= factor;
+        }
+        else
+        {
+            seconds /= factor;
+        }
+
+        TimeSpan time = TimeSpan.FromSeconds((double)seconds);
+
+        string formattedTime = string.Format("{0:D2}:{1:D2}:{2:D2}.{3:D3}",
+            time.Hours,
+            time.Minutes,
+            time.Seconds,
+            time.Milliseconds);
+
+        return formattedTime;
     }
 
-    string ConversionTypeFrom = ConversionTypes.SCY.ToString();
-    void ChangeConversionTypeFrom(ChangeEventArgs e)
+    /// <summary>
+    /// Search the time standard for the event type and return the appropriate factor based on gender.  Return 1 if there is a problem.
+    /// </summary>
+    /// <param name="eventType">The Event Type code</param>
+    /// <param name="timeStandards">The array of time standards</param>
+    /// <param name="gender">The Gender code</param>
+    /// <returns>the factor used for the time conversion</returns>
+    private decimal GetFactor(EventTypes eventType, TimeStandard[]? timeStandards, GenderTypes gender)
     {
-        if (e.Value is not null)
+        decimal factor = 1.0M;
+
+        if (timeStandards == null)
         {
-            ConversionTypeFrom = (string)e.Value;
+            return factor;
         }
+
+        foreach(TimeStandard ts in timeStandards)
+        {
+            if (ts.eventtype == eventType.ToString())
+            {
+                if (gender == GenderTypes.MALE)
+                {
+                    factor = ts.mens;
+                }
+                else
+                {
+                    factor = ts.womens;
+                }
+
+                break;
+            }
+        }
+
+        return factor;
     }
 
-    string ConversionTypeTo = ConversionTypes.LCM.ToString();
-    void ChangeConversionTypeTo(ChangeEventArgs e)
+    /// <summary>
+    /// Convert the string representation of the time to a decimal, ensure the time is in format H:M:S.m
+    /// </summary>
+    /// <param name="inTime">The time that the user entered</param>
+    /// <returns>decimal of the time</returns>
+    private decimal TimeToDecimal(string inTime)
     {
-        if (e.Value is not null)
+        // the time can have format H:M:S.m
+        string hours = "0";
+        string minutes = "0";
+        string seconds = "0";
+        string milliseconds = "0";
+
+        #region get the milliseconds
+
+        // split on the period
+        string[] periodSplit = inTime.Split('.');
+
+        if (periodSplit.Length > 2)
         {
-            ConversionTypeTo = (string)e.Value;
+            // if there are more than 2 parts then there are too many periods
+            return 0.0M;
         }
+        else if (periodSplit.Length == 1)
+        {
+            // no milliseconds: ie 20 or 40:53
+            seconds = periodSplit[0];
+        }
+        else if (periodSplit.Length == 2)
+        {
+            // there are milliseconds
+            seconds = periodSplit[0];
+            milliseconds = periodSplit[1];
+        }
+
+        #endregion
+
+        #region get the hours, minutes and seconds
+
+        // split on the colon
+        string[] colonSplit = seconds.Split(':');
+
+        if (colonSplit.Length > 3)
+        {
+            // if there are more than 3 parts then there are too many :
+            return 0.0M;
+        }
+        else if (colonSplit.Length == 3)
+        {
+            // formatted like 1:20:59
+            hours = colonSplit[0];
+            minutes = colonSplit[1];
+            seconds = colonSplit[2];
+        }
+        else if (colonSplit.Length == 2)
+        {
+            // formatted like 20:59
+            minutes = colonSplit[1];
+            seconds = colonSplit[0];
+        }
+        else if (colonSplit.Length == 1)
+        {
+            // formatted like 59
+            seconds = colonSplit[0];
+        }
+
+        #endregion
+
+        // convert the hours, minutes, seconds and milliseconds to a decimal
+        decimal dHours = 0.0M;
+        decimal dMinutes = 0.0M;
+        decimal dSeconds = 0.0M;
+        decimal dMilliseconds = 0.0M;
+
+        dHours = decimal.Parse(hours);
+        dMinutes = decimal.Parse(minutes);
+        dSeconds = decimal.Parse(seconds);
+        dMilliseconds = decimal.Parse(milliseconds);
+
+        return (dHours * 3600) + (dMinutes * 60) + dSeconds + (dMilliseconds / 100);
     }
 
-    string Gender = GenderTypes.FEMALE.ToString();
-    void ChangeGender(ChangeEventArgs e)
+    /// <summary>
+    /// Input event used to control what characters are typed into the text box
+    /// </summary>
+    private void OnTimeInput(string value)
     {
-        if (e.Value is not null)
+        // filter out any characters that are not numeric, : or .
+        foreach (char c in value)
         {
-            Gender = (string)e.Value;
+            if (!char.IsDigit(c) && c != ':' && c != '.')
+            {
+                value = value.Replace(c.ToString(), "");
+            }
         }
+
+        InTime = value;
     }
+
+    /// <summary>
+    /// Helper method used to verify whether the input time is correctly formatted
+    /// </summary>
+    /// <param name="inTime"></param>
+    /// <returns></returns>
+    private bool IsTimeValid(string inTime)
+    {
+        // a valid time can have format H:M:S.m
+
+        // empty time is invalid
+        if (string.IsNullOrEmpty(inTime)) { return false; }
+
+        // ensure no invalid characters are present
+        foreach (char c in inTime)
+        {
+            if (!char.IsDigit(c) && c != ':' && c != '.')
+            {
+                return false;
+            }
+        }
+
+        // there can be two semi-colons
+        if (inTime.Count(c => c == ':') > 2) { return false; }
+
+        // there can be one period
+        if (inTime.Count(c => c == '.') > 1) { return false; }
+
+        return true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        timeStandardsLCM2SCM = await Http.GetFromJsonAsync<TimeStandard[]>("data/LCM2SCM.json");
+        timeStandardsLCM2SCY = await Http.GetFromJsonAsync<TimeStandard[]>("data/LCM2SCY.json");
+        timeStandardsSCM2SCY = await Http.GetFromJsonAsync<TimeStandard[]>("data/SCM2SCY.json");
+    }
+
+    /// <summary>
+    /// Class object used to hold the timing data for the conversion
+    /// </summary>
+    public class TimeStandard
+    {
+        public string? eventtype { get; set; }
+
+        public decimal mens { get; set; }
+
+        public decimal womens { get; set; }
+    }
+
 }

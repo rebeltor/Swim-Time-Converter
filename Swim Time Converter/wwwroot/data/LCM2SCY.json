@@ -1,0 +1,67 @@
+[
+  {
+    "eventtype": "FREE50",
+    "mens": 0.870,
+    "womens": 0.880
+  },
+  {
+    "eventtype": "FREE100",
+    "mens": 0.870,
+    "womens": 0.880
+  },
+  {
+    "eventtype": "FREE200",
+    "mens": 0.875,
+    "womens": 0.885
+  },
+  {
+    "eventtype": "FREE400_500",
+    "mens": 1.105,
+    "womens": 1.120
+  },
+  {
+    "eventtype": "FREE1500_1650",
+    "mens": 0.960,
+    "womens": 0.980
+  },
+  {
+    "eventtype": "BACK100",
+    "mens": 0.870,
+    "womens": 0.985
+  },
+  {
+    "eventtype": "BACK200",
+    "mens": 0.870,
+    "womens": 0.985
+  },
+  {
+    "eventtype": "BREAST100",
+    "mens": 0.865,
+    "womens": 0.870
+  },
+  {
+    "eventtype": "BREAST200",
+    "mens": 0.865,
+    "womens": 0.870
+  },
+  {
+    "eventtype": "FLY100",
+    "mens": 0.885,
+    "womens": 0.890
+  },
+  {
+    "eventtype": "FLY200",
+    "mens": 0.880,
+    "womens": 0.890
+  },
+  {
+    "eventtype": "IM200",
+    "mens": 0.865,
+    "womens": 0.880
+  },
+  {
+    "eventtype": "IM400",
+    "mens": 0.880,
+    "womens": 0.885
+  }
+]
