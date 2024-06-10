@@ -1,0 +1,138 @@
+﻿@page "/"
+
+<PageTitle>Swim Time Converter</PageTitle>
+
+<h1>Swim Time Converter</h1>
+
+<div class="form-group">
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">Time</span>
+        </div>
+        <input type="text" class="form-control" @bind=@InTime placeholder="00:00.00" aria-label="Time" aria-describedby="basic-addon1">
+    </div>
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">Event</span>
+        </div>
+        <select class="form-control" @bind=@SelectedEvent>
+            <option value="@EventTypes.FREE50">@EnumHelper.GetDescription(EventTypes.FREE50)</option>
+            <option value="@EventTypes.FREE100">@EnumHelper.GetDescription(EventTypes.FREE100)</option>
+            <option value="@EventTypes.FREE200">@EnumHelper.GetDescription(EventTypes.FREE200)</option>
+            <option value="@EventTypes.FLY50">@EnumHelper.GetDescription(EventTypes.FLY50)</option>
+            <option value="@EventTypes.FLY100">@EnumHelper.GetDescription(EventTypes.FLY100)</option>
+            <option value="@EventTypes.FLY200">@EnumHelper.GetDescription(EventTypes.FLY200)</option>
+            <option value="@EventTypes.BREAST50">@EnumHelper.GetDescription(EventTypes.BREAST50)</option>
+            <option value="@EventTypes.BREAST100">@EnumHelper.GetDescription(EventTypes.BREAST100)</option>
+            <option value="@EventTypes.BREAST200">@EnumHelper.GetDescription(EventTypes.BREAST200)</option>
+            <option value="@EventTypes.BACK50">@EnumHelper.GetDescription(EventTypes.BACK50)</option>
+            <option value="@EventTypes.BACK100">@EnumHelper.GetDescription(EventTypes.BACK100)</option>
+            <option value="@EventTypes.BACK200">@EnumHelper.GetDescription(EventTypes.BACK200)</option>
+            <option value="@EventTypes.IM200">@EnumHelper.GetDescription(EventTypes.IM200)</option>
+            <option value="@EventTypes.IM400">@EnumHelper.GetDescription(EventTypes.IM400)</option>
+            <option value="@EventTypes.FREE400_500">@EnumHelper.GetDescription(EventTypes.FREE400_500)</option>
+            <option value="@EventTypes.FREE800_1000">@EnumHelper.GetDescription(EventTypes.FREE800_1000)</option>
+            <option value="@EventTypes.FREE1500_1650">@EnumHelper.GetDescription(EventTypes.FREE1500_1650)</option>
+        </select>
+    </div>
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">From</span>
+        </div>
+        <select class="form-control" @bind=@ConversionTypeFrom>
+            <option value="@ConversionTypes.SCY">@EnumHelper.GetDescription(ConversionTypes.SCY)</option>
+            <option value="@ConversionTypes.SCM">@EnumHelper.GetDescription(ConversionTypes.SCM)</option>
+            <option value="@ConversionTypes.LCM">@EnumHelper.GetDescription(ConversionTypes.LCM)</option>
+        </select>
+    </div>
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">To</span>
+        </div>
+        <select class="form-control" @bind=@ConversionTypeTo>
+            <option value="@ConversionTypes.LCM">@EnumHelper.GetDescription(ConversionTypes.LCM)</option>
+            <option value="@ConversionTypes.SCM">@EnumHelper.GetDescription(ConversionTypes.SCM)</option>
+            <option value="@ConversionTypes.SCY">@EnumHelper.GetDescription(ConversionTypes.SCY)</option>
+        </select>
+    </div>
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">Gender</span>
+        </div>
+        <select class="form-control" @bind=@Gender>
+            <option value="@GenderTypes.FEMALE">@EnumHelper.GetDescription(GenderTypes.FEMALE)</option>
+            <option value="@GenderTypes.MALE">@EnumHelper.GetDescription(GenderTypes.MALE)</option>
+        </select>
+    </div>
+</div>
+
+<p>@SelectedEvent @InTime @ConversionTypeFrom @ConversionTypeTo @Gender</p>
+
+<p>@OutTime</p>
+
+
+<button class="btn btn-primary" @onclick="ReCalculateTime">Re-calculate</button>
+
+
+
+
+
+
+@code {
+    private string OutTime = "00:00.00";
+
+    private void ReCalculateTime()
+    {
+        OutTime = "99:99.99";
+    }
+
+    string InTime = "00:00.00";
+    void ChangeInTime(ChangeEventArgs e)
+    {
+        if (e.Value is not null)
+        {
+            InTime = (string)e.Value;
+        }
+    }
+
+    string SelectedEvent = EventTypes.FREE50.ToString();
+    void ChangeEvent(ChangeEventArgs e)
+    {
+        if (e.Value is not null)
+        {
+            SelectedEvent = (string)e.Value;
+        }
+    }
+
+    string ConversionTypeFrom = ConversionTypes.SCY.ToString();
+    void ChangeConversionTypeFrom(ChangeEventArgs e)
+    {
+        if (e.Value is not null)
+        {
+            ConversionTypeFrom = (string)e.Value;
+        }
+    }
+
+    string ConversionTypeTo = ConversionTypes.LCM.ToString();
+    void ChangeConversionTypeTo(ChangeEventArgs e)
+    {
+        if (e.Value is not null)
+        {
+            ConversionTypeTo = (string)e.Value;
+        }
+    }
+
+    string Gender = GenderTypes.FEMALE.ToString();
+    void ChangeGender(ChangeEventArgs e)
+    {
+        if (e.Value is not null)
+        {
+            Gender = (string)e.Value;
+        }
+    }
+}
