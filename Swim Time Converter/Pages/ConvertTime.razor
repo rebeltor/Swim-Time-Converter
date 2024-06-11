@@ -11,7 +11,7 @@
         <div class="input-group-prepend">
             <span class="input-group-text" id="basic-addon1">Time</span>
         </div>
-        <input type="text" class="form-control" placeholder="00:00.00" aria-describedby="basic-addon1" 
+        <input type="text" class="form-control" placeholder="00:00.00" aria-describedby="Input time formatted H:M.m" 
             @bind:event="oninput" @bind:get="InTime" @bind:set="OnTimeInput" />
     </div>
 
@@ -19,7 +19,7 @@
         <div class="input-group-prepend">
             <span class="input-group-text" id="basic-addon1">Event</span>
         </div>
-        <select class="form-control" @bind=@SelectedEvent>
+        <select value="@EventTypes.FREE50" @onchange="@onEventTypeChanged" class="form-control">
             <option value="@EventTypes.FREE50">@EnumHelper.GetDescription(EventTypes.FREE50)</option>
             <option value="@EventTypes.FREE100">@EnumHelper.GetDescription(EventTypes.FREE100)</option>
             <option value="@EventTypes.FREE200">@EnumHelper.GetDescription(EventTypes.FREE200)</option>
@@ -35,7 +35,7 @@
             <option value="@EventTypes.IM200">@EnumHelper.GetDescription(EventTypes.IM200)</option>
             <option value="@EventTypes.IM400">@EnumHelper.GetDescription(EventTypes.IM400)</option>
             <option value="@EventTypes.FREE400_500">@EnumHelper.GetDescription(EventTypes.FREE400_500)</option>
-            <!--<option value="@EventTypes.FREE800_1000">@EnumHelper.GetDescription(EventTypes.FREE800_1000)</option>-->
+            <option value="@EventTypes.FREE800_1000">@EnumHelper.GetDescription(EventTypes.FREE800_1000)</option>
             <option value="@EventTypes.FREE1500_1650">@EnumHelper.GetDescription(EventTypes.FREE1500_1650)</option>
         </select>
     </div>
@@ -44,10 +44,10 @@
         <div class="input-group-prepend">
             <span class="input-group-text" id="basic-addon1">From</span>
         </div>
-        <select class="form-control" @bind=@ConversionTypeFrom>
-            <option value="@ConversionTypes.SCY">@EnumHelper.GetDescription(ConversionTypes.SCY)</option>
-            <!--<option value="@ConversionTypes.SCM">@EnumHelper.GetDescription(ConversionTypes.SCM)</option>-->
+        <select value="@ConversionTypes.SCY" @onchange="@onConvertFromChanged" class="form-control">
             <option value="@ConversionTypes.LCM">@EnumHelper.GetDescription(ConversionTypes.LCM)</option>
+            <option value="@ConversionTypes.SCM">@EnumHelper.GetDescription(ConversionTypes.SCM)</option>
+            <option value="@ConversionTypes.SCY">@EnumHelper.GetDescription(ConversionTypes.SCY)</option>
         </select>
     </div>
 
@@ -55,7 +55,7 @@
         <div class="input-group-prepend">
             <span class="input-group-text" id="basic-addon1">To</span>
         </div>
-        <select class="form-control" @bind=@ConversionTypeTo>
+        <select value="@ConversionTypes.LCM" @onchange="@onConvertToChanged" class="form-control">
             <option value="@ConversionTypes.LCM">@EnumHelper.GetDescription(ConversionTypes.LCM)</option>
             <option value="@ConversionTypes.SCM">@EnumHelper.GetDescription(ConversionTypes.SCM)</option>
             <option value="@ConversionTypes.SCY">@EnumHelper.GetDescription(ConversionTypes.SCY)</option>
@@ -66,27 +66,28 @@
         <div class="input-group-prepend">
             <span class="input-group-text" id="basic-addon1">Gender</span>
         </div>
+        <!-- this is an example of how to catch the change event on the combobox
         <select class="form-control" @bind=@Gender>
             <option value="@GenderTypes.FEMALE">@EnumHelper.GetDescription(GenderTypes.FEMALE)</option>
             <option value="@GenderTypes.MALE">@EnumHelper.GetDescription(GenderTypes.MALE)</option>
         </select>
-        <!-- this is an example of how to catch the change event on the combobox
+        -->
+        <!-- this is how you can catch the change event on a combobox -->
         <select value="@GenderTypes.FEMALE" @onchange="@onGenderChanged" class="form-control">
             <option value="@GenderTypes.FEMALE">@EnumHelper.GetDescription(GenderTypes.FEMALE)</option>
             <option value="@GenderTypes.MALE">@EnumHelper.GetDescription(GenderTypes.MALE)</option>
         </select>
-        -->
     </div>
 </div>
 
 <!-- used for debugging / troubleshooting -->
-<p>@InTime @SelectedEvent @ConversionTypeFrom @ConversionTypeTo @Gender</p>
+<!--<p>@InTime @SelectedEvent @ConversionTypeFrom @ConversionTypeTo @Gender</p>-->
 
-<p>@ErrorMessage</p>
-<p>@OutTime</p>
+<h4 class="conversion-error">@ErrorMessage</h4>
+<h3 class="conversion-time">@OutTime</h3>
 
+<!-- manual way to recalculate the information without edits to the UI controls -->
 <button class="btn btn-primary" @onclick="ReCalculateTime">Re-calculate</button>
-
 
 @code {
 
@@ -98,8 +99,8 @@
     private string OutTime = "00:00.00";
     private string ErrorMessage = "";
 
-    private TimeStandard[]? timeStandardsLCM2SCM;
     private TimeStandard[]? timeStandardsLCM2SCY;
+    private TimeStandard[]? timeStandardsLCM2SCM;    
     private TimeStandard[]? timeStandardsSCM2SCY;
 
     private void ReCalculateTime()
@@ -108,14 +109,14 @@
 
         #region ensure we have valid conversion data
 
-        if (timeStandardsLCM2SCM == null)
-        {
-            ErrorMessage = "Could not locate LCM to SCM conversion table";
-            errorFound = true;
-        }
         if (timeStandardsLCM2SCY == null)
         {
             ErrorMessage = "Could not locate LCM to SCY conversion table";
+            errorFound = true;
+        }
+        if (timeStandardsLCM2SCM == null)
+        {
+            ErrorMessage = "Could not locate LCM to SCM conversion table";
             errorFound = true;
         }
         if (timeStandardsSCM2SCY == null)
@@ -205,6 +206,7 @@
         else
         {
             // otherwise no errors were found, perform the conversion
+            ErrorMessage = "";
             OutTime = TimeConversion(InTime, eventType, convertFrom, convertTo, gender);
         }
     }
@@ -279,6 +281,17 @@
             time.Seconds,
             time.Milliseconds);
 
+        // if the string starts with 00: then remove it
+        if (formattedTime.StartsWith("00:"))
+        {
+            formattedTime = formattedTime.Substring(3);
+        }
+        // if the string still starts with 00: then remove it
+        if (formattedTime.StartsWith("00:"))
+        {
+            formattedTime = formattedTime.Substring(3);
+        }
+
         return formattedTime;
     }
 
@@ -344,13 +357,22 @@
         else if (periodSplit.Length == 1)
         {
             // no milliseconds: ie 20 or 40:53
-            seconds = periodSplit[0];
+            if (!string.IsNullOrEmpty(periodSplit[0]))
+            {
+                seconds = periodSplit[0];
+            }
         }
         else if (periodSplit.Length == 2)
         {
             // there are milliseconds
-            seconds = periodSplit[0];
-            milliseconds = periodSplit[1];
+            if (!string.IsNullOrEmpty(periodSplit[0]))
+            {
+                seconds = periodSplit[0];
+            }
+            if (!string.IsNullOrEmpty(periodSplit[1]))
+            {
+                milliseconds = periodSplit[1];
+            }
         }
 
         #endregion
@@ -368,20 +390,38 @@
         else if (colonSplit.Length == 3)
         {
             // formatted like 1:20:59
-            hours = colonSplit[0];
-            minutes = colonSplit[1];
-            seconds = colonSplit[2];
+            if (!string.IsNullOrEmpty(colonSplit[0]))
+            {
+                hours = colonSplit[0];
+            }
+            if (!string.IsNullOrEmpty(colonSplit[1]))
+            {
+                minutes = colonSplit[1];
+            }
+            if (!string.IsNullOrEmpty(colonSplit[2]))
+            {
+                seconds = colonSplit[2];
+            }
         }
         else if (colonSplit.Length == 2)
         {
             // formatted like 20:59
-            minutes = colonSplit[1];
-            seconds = colonSplit[0];
+            if (!string.IsNullOrEmpty(colonSplit[0]))
+            {
+                minutes = colonSplit[0];
+            }
+            if (!string.IsNullOrEmpty(colonSplit[1]))
+            {
+                seconds = colonSplit[1];
+            }
         }
         else if (colonSplit.Length == 1)
         {
             // formatted like 59
-            seconds = colonSplit[0];
+            if (!string.IsNullOrEmpty(colonSplit[0]))
+            {
+                seconds = colonSplit[0];
+            }
         }
 
         #endregion
@@ -398,23 +438,6 @@
         dMilliseconds = decimal.Parse(milliseconds);
 
         return (dHours * 3600) + (dMinutes * 60) + dSeconds + (dMilliseconds / 100);
-    }
-
-    /// <summary>
-    /// Input event used to control what characters are typed into the text box
-    /// </summary>
-    private void OnTimeInput(string value)
-    {
-        // filter out any characters that are not numeric, : or .
-        foreach (char c in value)
-        {
-            if (!char.IsDigit(c) && c != ':' && c != '.')
-            {
-                value = value.Replace(c.ToString(), "");
-            }
-        }
-
-        InTime = value;
     }
 
     /// <summary>
@@ -447,10 +470,77 @@
         return true;
     }
 
+    #region input event handlers
+
+    /// <summary>
+    /// Input event used to control what characters are typed into the text box
+    /// </summary>
+    private void OnTimeInput(string value)
+    {
+        // filter out any characters that are not numeric, : or .
+        foreach (char c in value)
+        {
+            if (!char.IsDigit(c) && c != ':' && c != '.')
+            {
+                value = value.Replace(c.ToString(), "");
+            }
+        }
+
+        InTime = value;
+
+        // recalculate the value as the user types
+        try
+        {
+            ReCalculateTime();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    #endregion
+
+    #region change event handlers
+
+    private void onEventTypeChanged(ChangeEventArgs args)
+    {
+        SelectedEvent = args?.Value?.ToString();
+
+        ReCalculateTime();
+    }
+
+    private void onConvertFromChanged(ChangeEventArgs args)
+    {
+        ConversionTypeFrom = args?.Value?.ToString();
+
+        ReCalculateTime();
+    }
+
+    private void onConvertToChanged(ChangeEventArgs args)
+    {
+        ConversionTypeTo = args?.Value?.ToString();
+
+        ReCalculateTime();
+    }
+
+    private void onGenderChanged(ChangeEventArgs args)
+    {
+        Gender = args?.Value?.ToString();
+
+        ReCalculateTime();
+    }
+
+    #endregion
+
     protected override async Task OnInitializedAsync()
     {
-        timeStandardsLCM2SCM = await Http.GetFromJsonAsync<TimeStandard[]>("data/LCM2SCM.json");
         timeStandardsLCM2SCY = await Http.GetFromJsonAsync<TimeStandard[]>("data/LCM2SCY.json");
+
+        // since we are only converting LCM to SCY we don't need the other tables
+        // if you want to add the other tables in, review the data first to be sure its accurate
+        // the SwimSwam article where I pulled the NCAA data from didnt have these tables
+        timeStandardsLCM2SCM = await Http.GetFromJsonAsync<TimeStandard[]>("data/LCM2SCM.json");
         timeStandardsSCM2SCY = await Http.GetFromJsonAsync<TimeStandard[]>("data/SCM2SCY.json");
     }
 

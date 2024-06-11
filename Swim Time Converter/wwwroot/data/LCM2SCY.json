@@ -2,66 +2,71 @@
   {
     "eventtype": "FREE50",
     "mens": 0.870,
-    "womens": 0.880
+    "womens": 0.881
   },
   {
     "eventtype": "FREE100",
-    "mens": 0.870,
-    "womens": 0.880
+    "mens": 0.873,
+    "womens": 0.884
   },
   {
     "eventtype": "FREE200",
     "mens": 0.875,
-    "womens": 0.885
+    "womens": 0.884
   },
   {
     "eventtype": "FREE400_500",
-    "mens": 1.105,
-    "womens": 1.120
+    "mens": 1.115,
+    "womens": 1.122
+  },
+  {
+    "eventtype": "FREE800_1000",
+    "mens": 1.115,
+    "womens": 1.13
   },
   {
     "eventtype": "FREE1500_1650",
-    "mens": 0.960,
-    "womens": 0.980
+    "mens": 0.975,
+    "womens": 0.985
   },
   {
     "eventtype": "BACK100",
-    "mens": 0.870,
-    "womens": 0.985
+    "mens": 0.845,
+    "womens": 0.863
   },
   {
     "eventtype": "BACK200",
-    "mens": 0.870,
-    "womens": 0.985
+    "mens": 0.859,
+    "womens": 0.867
   },
   {
     "eventtype": "BREAST100",
-    "mens": 0.865,
-    "womens": 0.870
+    "mens": 0.866,
+    "womens": 0.88
   },
   {
     "eventtype": "BREAST200",
-    "mens": 0.865,
-    "womens": 0.870
+    "mens": 0.868,
+    "womens": 0.888
   },
   {
     "eventtype": "FLY100",
-    "mens": 0.885,
-    "womens": 0.890
+    "mens": 0.878,
+    "womens": 0.887
   },
   {
     "eventtype": "FLY200",
-    "mens": 0.880,
-    "womens": 0.890
+    "mens": 0.876,
+    "womens": 0.891
   },
   {
     "eventtype": "IM200",
-    "mens": 0.865,
-    "womens": 0.880
+    "mens": 0.867,
+    "womens": 0.877
   },
   {
     "eventtype": "IM400",
-    "mens": 0.880,
-    "womens": 0.885
+    "mens": 0.875,
+    "womens": 0.886
   }
 ]

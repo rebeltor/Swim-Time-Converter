@@ -20,6 +20,11 @@
     "womens": 1.143
   },
   {
+    "eventtype": "FREE800_1000",
+    "mens": 1.115,
+    "womens": 1.13
+  },
+  {
     "eventtype": "FREE1500_1650",
     "mens": 1.013,
     "womens": 1.013
